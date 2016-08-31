@@ -1,0 +1,75 @@
+;;; auto-answer.el --- Answer automatically to yes-or-no questions  -*- lexical-binding: t; -*-
+
+;; Copyright (C) 2016  Nicolas Richard
+
+;; Author: Nicolas Richard <youngfrog@members.fsf.org>
+;; Keywords: convenience, elisp
+
+;; This program is free software; you can redistribute it and/or modify
+;; it under the terms of the GNU General Public License as published by
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
+
+;; This program is distributed in the hope that it will be useful,
+;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;; GNU General Public License for more details.
+
+;; You should have received a copy of the GNU General Public License
+;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+;;; Commentary:
+
+;; Some functions prompt by calling y-or-n-p or yes-or-no-p. It is
+;; sometimes desirable to give the answer to the prompt from lisp.
+
+;; One way to do this is to push an event (corresponding to the
+;; keypress) onto `unread-command-events`. Another way is to advice
+;; the prompting function to bypass the prompt. This package does the
+;; latter.
+
+;; See the test file for examples of usage.
+
+;;; Code:
+
+(require 'dash)
+(defvar auto-answer nil
+  "When bound, prompting functions will not prompt.
+
+This variable should be bound to a list of elements of the
+form (REGEXP ANSWER).
+
+If a prompt string, i.e. the first argument of one of the
+function in `auto-answer-functions', matches REGEXP, then that
+function will return ANSWER without prompting.")
+
+(defconst auto-answer-functions '(y-or-n-p
+                                  yes-or-no-p
+                                  read-string
+                                  read-from-minibuffer
+                                  read-key-sequence
+                                  read-key-sequence-vector
+                                  read-event)
+  "List of functions to override.")
+
+(defun auto-answer (oldfun &rest args)
+  (let ((prompt (car args)))
+    (let*
+        ((matcher-answer (and (stringp prompt)
+                              (--first (string-match (car it) prompt) auto-answer)))
+         (dontask (and matcher-answer (cdr matcher-answer)))
+         (answer (cadr matcher-answer)))
+      (if dontask
+          answer
+        (apply oldfun args)))))
+
+(mapc (lambda (fun)
+        (advice-add fun :around 'auto-answer))
+      auto-answer-functions)
+
+(provide 'auto-answer)
+;;; auto-answer.el ends here
+
+;; Local Variables:
+;; open-paren-in-column-0-is-defun-start: nil
+;; End:
