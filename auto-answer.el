@@ -29,7 +29,14 @@
 ;; the prompting function to bypass the prompt. This package does the
 ;; latter.
 
-;; See the test file for examples of usage.
+;; Example usage:
+;; (let ((auto-answer '(("\\`What's your name\\? \\'" "jack")
+;;                      ("\\`What's your password\\? \\'" "secr3t"))))
+;;   (list
+;;    (read-string "What's your name? ")
+;;    (read-passwd "What's your password? ")))
+;; => ("jack" "secr3t")
+
 
 ;;; Code:
 
