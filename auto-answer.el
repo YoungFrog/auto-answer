@@ -1,4 +1,4 @@
-;;; auto-answer.el --- Answer automatically to yes-or-no questions  -*- lexical-binding: t; -*-
+;;; auto-answer.el --- Answer automatically to prompt  -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2016  Nicolas Richard
 
