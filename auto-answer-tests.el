@@ -24,16 +24,30 @@
 
 ;;; Code:
 
+(require 'auto-answer)
+
+(defmacro auto-answer-should-prompt (body)
+  (declare (indent 0)
+           (debug t))
+  `(should (with-timeout (1 t) ,body nil)))
+
+(defmacro auto-answer-should-return (value body)
+  (declare (indent 1)
+           (debug (sexp body)))
+  `(should (equal ,value (with-timeout
+                             ;; call make-symbol at expansion time
+                             (1 ,(make-symbol "anything"))
+                           ,body))))
+
 (ert-deftest auto-answer-test ()
-  (should (eq t
-              (let ((auto-answer '(("foo" t))))
-                (y-or-n-p "foo"))))
-  (should (eq nil
-              (let ((auto-answer '(("\\`foo\\'" nil))))
-                (y-or-n-p "foo"))))
-  (should (equal "jack"
-              (let ((auto-answer '(("\\`What's your name\\? \\'" "jack"))))
-                (read-string "What's your name? ")))))
+  (auto-answer-should-return "jack"
+    (let ((auto-answer '(("\\`What's your name\\? \\'" "jack"))))
+      (read-string "What's your name? ")))
+  (auto-answer-should-prompt
+    (let ((auto-answer '(("Tell me more" "jack"))))
+      (read-string "What's your name? "))))
+
+
 
 (provide 'auto-answer-tests)
 ;;; auto-answer-tests.el ends here
