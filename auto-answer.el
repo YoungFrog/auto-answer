@@ -57,7 +57,8 @@ function will return ANSWER without prompting.")
                                   read-from-minibuffer
                                   read-key-sequence
                                   read-key-sequence-vector
-                                  read-event)
+                                  read-event
+                                  read-passwd)
   "List of functions to override.")
 
 (defun auto-answer (oldfun &rest args)
@@ -70,6 +71,18 @@ function will return ANSWER without prompting.")
       (if dontask
           answer
         (apply oldfun args)))))
+
+(defun rmc-auto-answer (oldfun &rest args)
+  (let ((prompt (car args)))
+    (let*
+        ((matcher-answer (and (stringp prompt)
+                              (--first (string-match (car it) prompt) auto-answer)))
+         (dontask (and matcher-answer (cdr matcher-answer))))
+      (if dontask
+          (--first (eq (car it) dontask) (cadr args))
+        (apply oldfun args)))))
+
+(advice-add #'read-multiple-choice :around #'rmc-auto-answer)
 
 (mapc (lambda (fun)
         (advice-add fun :around 'auto-answer))
