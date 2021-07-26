@@ -62,6 +62,12 @@ function will return ANSWER without prompting.")
   "List of functions to override.")
 
 (defun auto-answer (oldfun &rest args)
+  "Used as an around advice to auto-answer questions.
+
+The questions that will be answered are those asked by functions
+in the list `auto-answer-functions`.
+
+See also function `auto-answer-rmc`."
   (let ((prompt (car args)))
     (let*
         ((matcher-answer (and (stringp prompt)
@@ -72,7 +78,13 @@ function will return ANSWER without prompting.")
           answer
         (apply oldfun args)))))
 
-(defun rmc-auto-answer (oldfun &rest args)
+(defun auto-answer-rmc (oldfun &rest args)
+    "Used as an around advice to auto-answer questions.
+
+The questions that will be answered are those asked by the
+function `read-multiple-choice`.
+
+See also function `auto-answer`."
   (let ((prompt (car args)))
     (let*
         ((matcher-answer (and (stringp prompt)
@@ -82,7 +94,7 @@ function will return ANSWER without prompting.")
           (--first (eq (car it) dontask) (cadr args))
         (apply oldfun args)))))
 
-(advice-add #'read-multiple-choice :around #'rmc-auto-answer)
+(advice-add #'read-multiple-choice :around #'auto-answer-rmc)
 
 (mapc (lambda (fun)
         (advice-add fun :around 'auto-answer))
